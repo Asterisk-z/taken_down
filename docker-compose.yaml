@@ -1,0 +1,80 @@
+services:
+    app:
+        build:
+            dockerfile: Dockerfile
+        # volumes:
+        #   - ./:/var/www/html
+        networks:
+          - example-net
+        restart: unless-stopped
+        tty: true
+        ports:
+          - 8965:8965
+        depends_on:
+          - db
+        env_file:
+          - .env
+
+    db:
+        image: mysql:8.0
+        volumes:
+          - mysqldata:/var/lib/mysql
+        ports:
+          - "3308:3306"
+        networks:
+          - example-net
+        restart: unless-stopped
+        command: --max_allowed_packet=325058560
+        container_name: db
+        environment:
+            MYSQL_ROOT_PASSWORD: h394jocjcwyea56a
+            MYSQL_USER: user
+            MYSQL_PASSWORD: h394jocjcwyea56a
+            MYSQL_DATABASE: taken_down
+
+    phpmyadmin:
+        image: phpmyadmin
+        restart: always
+        ports:
+          - 5147:80
+        environment:
+            PMA_HOST: db
+            MYSQL_ROOT_PASSWORD: h394jocjcwyea56a
+            UPLOAD_LIMIT: 100000000
+        depends_on:
+          - db
+        networks:
+          - example-net
+
+    redis:
+        image: redis:latest
+        container_name: redis
+        restart: always
+        volumes:
+          - redis_volume:/data
+        ports:
+          - 6379:6379
+        networks:
+          - example-net
+
+    redis_insight:
+        image: redislabs/redisinsight:latest
+        container_name: redis_insight
+        restart: always
+        volumes:
+          - redis_insight_volume:/db
+        ports:
+          - 8001:8001
+        networks:
+          - example-net
+
+volumes:
+    mysqldata:
+    letsencrypt:
+    redis_insight_volume:
+    redis_volume:
+
+
+networks:
+  example-net:
+    driver: bridge
